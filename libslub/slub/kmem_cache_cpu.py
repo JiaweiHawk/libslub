@@ -8,8 +8,8 @@ import libslub.slub.heap_structure as hs
 importlib.reload(hs)
 import libslub.slub.sb as sb
 importlib.reload(sb)
-import libslub.slub.page as p
-importlib.reload(p)
+import libslub.slub.slab as s
+importlib.reload(s)
 import libslub.slub.obj as obj
 importlib.reload(obj)
 import libslub.frontend.commands.gdb.sbobject as sbobject
@@ -19,7 +19,7 @@ importlib.reload(sbobject)
 class kmem_cache_cpu(hs.heap_structure):
     """python representation of a struct kmem_cache_cpu
     
-    struct kmem_cache_cpu {: https://elixir.bootlin.com/linux/v5.15/source/include/linux/slub_def.h#L48
+    struct kmem_cache_cpu {: https://elixir.bootlin.com/linux/v6.3/source/include/linux/slub_def.h#L49
     """
 
     def __init__(self, sb, cpu_id, kmem_cache, value=None, address=None):
@@ -54,8 +54,8 @@ class kmem_cache_cpu(hs.heap_structure):
 
         # the slab from which we are allocating for that cpu core
         self.main_slab = None
-        if self.value["page"]:
-            self.main_slab = p.page(self.sb, self.kmem_cache, self, None, sb.SlabType.MAIN_SLAB, value=self.value["page"].dereference(), is_main_slab=True)
+        if self.value["slab"]:
+            self.main_slab = s.slab(self.sb, self.kmem_cache, self, None, sb.SlabType.MAIN_SLAB, value=self.value["slab"].dereference(), is_main_slab=True)
 
         # update the main freelist's objects "page"
         for o in self.freelist:
@@ -73,7 +73,7 @@ class kmem_cache_cpu(hs.heap_structure):
         slab_ptr = self.value["partial"]
         while slab_ptr:
             slab = slab_ptr.dereference()
-            partial_slab = p.page(self.sb, self.kmem_cache, self, None, sb.SlabType.PARTIAL_SLAB, index=slab_index, count=slab_count, value=slab)
+            partial_slab = s.slab(self.sb, self.kmem_cache, self, None, sb.SlabType.PARTIAL_SLAB, index=slab_index, count=slab_count, value=slab)
             self.partial_slabs.append(partial_slab)
             slab_ptr = slab["next"]
             slab_index += 1
